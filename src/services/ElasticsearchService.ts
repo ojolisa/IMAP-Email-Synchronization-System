@@ -396,4 +396,29 @@ export class ElasticsearchService {
             throw error;
         }
     }
+
+    /**
+     * Delete the entire Elasticsearch index
+     * WARNING: This will permanently delete all indexed emails
+     */
+    async deleteIndex(): Promise<void> {
+        try {
+            const indexExists = await this.client.indices.exists({
+                index: this.index
+            });
+
+            if (indexExists) {
+                await this.client.indices.delete({
+                    index: this.index
+                });
+                logger.info(`Successfully deleted index: ${this.index}`);
+            } else {
+                logger.warn(`Index ${this.index} does not exist`);
+            }
+
+        } catch (error) {
+            logger.error(`Failed to delete index ${this.index}:`, error);
+            throw error;
+        }
+    }
 }
