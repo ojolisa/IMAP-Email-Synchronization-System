@@ -62,3 +62,17 @@ export interface EmailSearchResult {
     total: number;
     hits: IndexedEmail[];
 }
+
+export type CategoryLabel = 'INTERESTED' | 'MEETING_BOOKED' | 'NOT_INTERESTED' | 'SPAM' | 'OUT_OF_OFFICE';
+
+export interface EmailCategory {
+    messageId: string;
+    category: CategoryLabel;
+    confidence: number;
+    categorizedAt: Date;
+}
+
+// Extend IndexedEmail to include categorization
+export interface IndexedEmailWithCategory extends IndexedEmail {
+    category?: EmailCategory;
+}

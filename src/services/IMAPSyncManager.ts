@@ -1,17 +1,20 @@
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import { IMAPConfig, EmailMessage, IMAPAccount } from '../types';
+import { IMAPConfig, EmailMessage, IMAPAccount, IndexedEmailWithCategory } from '../types';
 import { logger } from '../utils/logger';
 import { ElasticsearchService } from './ElasticsearchService';
+import { EmailCategorizationService } from './EmailCategorizationService';
 
 export class IMAPSyncManager {
     private accounts: IMAPAccount[] = [];
     private isRunning: boolean = false;
     private elasticsearchService!: ElasticsearchService;
+    private categorizationService!: EmailCategorizationService;
 
     constructor() {
         this.loadAccountsFromEnv();
         this.initializeElasticsearch();
+        this.initializeCategorization();
     }
 
     private initializeElasticsearch(): void {
@@ -368,6 +371,16 @@ export class IMAPSyncManager {
         }
     }
 
+    private initializeCategorization(): void {
+        try {
+            this.categorizationService = new EmailCategorizationService();
+            logger.info('Email categorization service initialized');
+        } catch (error) {
+            logger.error('Failed to initialize email categorization:', error);
+            // Continue without categorization if it fails
+        }
+    }
+
     private async processEmail(email: EmailMessage): Promise<void> {
         // Log the email details
         logger.info(`Processing email: ${email.subject} from ${email.from} (${email.accountName})`);
@@ -381,8 +394,24 @@ export class IMAPSyncManager {
             );
 
             if (!exists) {
-                // Index the email in Elasticsearch
-                await this.elasticsearchService.indexEmail(email);
+                // Categorize the email
+                let emailWithCategory: IndexedEmailWithCategory = { 
+                    ...email,
+                    indexed_at: new Date()
+                };
+                
+                if (this.categorizationService) {
+                    try {
+                        const category = await this.categorizationService.categorizeEmail(email);
+                        emailWithCategory.category = category;
+                        logger.debug(`Email categorized as: ${category.category}`);
+                    } catch (error) {
+                        logger.error(`Failed to categorize email ${email.messageId}:`, error);
+                    }
+                }
+
+                // Index the email with category in Elasticsearch
+                await this.elasticsearchService.indexEmail(emailWithCategory);
                 logger.debug(`Successfully indexed email: ${email.subject}`);
             } else {
                 logger.debug(`Email already indexed: ${email.subject}`);

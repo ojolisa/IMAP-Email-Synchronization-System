@@ -9,6 +9,7 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "api": "nodemon --exec ts-node src/api-server.ts",
     "search-demo": "ts-node src/search-demo.ts",
+    "test-categorization": "ts-node src/test-categorization.ts",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
@@ -38,6 +39,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@google/genai": "^1.12.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",

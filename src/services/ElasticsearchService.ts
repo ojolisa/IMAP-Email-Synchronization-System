@@ -74,7 +74,15 @@ export class ElasticsearchService {
                                 folder: { type: 'keyword' },
                                 accountName: { type: 'keyword' },
                                 flags: { type: 'keyword' },
-                                indexed_at: { type: 'date' }
+                                indexed_at: { type: 'date' },
+                                category: {
+                                    properties: {
+                                        messageId: { type: 'keyword' },
+                                        category: { type: 'keyword' },
+                                        confidence: { type: 'float' },
+                                        categorizedAt: { type: 'date' }
+                                    }
+                                }
                             }
                         }
                     }
