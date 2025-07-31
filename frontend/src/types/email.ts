@@ -7,7 +7,7 @@ export interface Email {
     body: string;
     folder: string;
     account: string;
-    categories: string[];
+    categories: EmailCategory[];
 }
 
 export interface EmailFolder {
@@ -20,9 +20,11 @@ export interface EmailAccount {
     email: string;
 }
 
+export type EmailCategory = 'INTERESTED' | 'MEETING_BOOKED' | 'NOT_INTERESTED' | 'SPAM' | 'OUT_OF_OFFICE';
+
 export interface EmailSearchParams {
     query: string;
     folder?: string;
     account?: string;
-    categories?: string[];
+    categories?: EmailCategory[];
 }

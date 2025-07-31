@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Email, EmailFolder, EmailAccount, EmailSearchParams } from '../types/email';
+import type { Email, EmailFolder, EmailAccount, EmailSearchParams, EmailCategory } from '../types/email';
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -9,7 +9,12 @@ const api = axios.create({
 
 export const emailApi = {
     search: async (params: EmailSearchParams): Promise<Email[]> => {
-        const { data } = await api.get('/emails/search', { params });
+        const { data } = await api.get('/emails/search', {
+            params: {
+                ...params,
+                categories: params.categories?.join(',') // Convert array to comma-separated string
+            }
+        });
         return data.results || [];
     },
 
@@ -23,8 +28,8 @@ export const emailApi = {
         return data;
     },
 
-    getCategories: async (): Promise<string[]> => {
+    getCategories: async (): Promise<EmailCategory[]> => {
         const { data } = await api.get('/categories');
-        return data;
+        return data as EmailCategory[];
     }
 };

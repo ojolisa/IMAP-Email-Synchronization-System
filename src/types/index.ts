@@ -46,6 +46,19 @@ export interface IndexedEmail {
     indexed_at: Date;
 }
 
+export interface EmailSearchQuery {
+    text?: string;
+    subject?: string;
+    from?: string;
+    to?: string;
+    accountName?: string;
+    folder?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    flags?: string[];
+    categories?: string[];
+}
+
 export interface IMAPFolder {
     name: string;
     path: string;

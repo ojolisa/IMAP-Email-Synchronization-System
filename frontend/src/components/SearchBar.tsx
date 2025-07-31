@@ -1,9 +1,9 @@
 import { TextField, Box, Autocomplete } from '@mui/material';
-import type { EmailSearchParams, EmailAccount } from '../types/email';
+import type { EmailSearchParams, EmailAccount, EmailCategory } from '../types/email';
 
 interface SearchBarProps {
     accounts: EmailAccount[];
-    categories: string[];
+    categories: EmailCategory[];
     searchParams: EmailSearchParams;
     onSearchChange: (params: EmailSearchParams) => void;
 }
@@ -38,7 +38,9 @@ export const SearchBar = ({ accounts, categories, searchParams, onSearchChange }
                 renderInput={(params) => <TextField {...params} label="Categories" />}
                 renderOption={(props, option) => (
                     <li {...props} key={option}>
-                        {option}
+                        {option.split('_').map(word => 
+                            word.charAt(0) + word.slice(1).toLowerCase()
+                        ).join(' ')}
                     </li>
                 )}
             />

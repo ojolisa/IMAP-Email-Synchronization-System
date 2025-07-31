@@ -16,7 +16,7 @@ export class EmailSearchAPI {
      * Search emails with various filters
      */
     async searchEmails(searchParams: {
-        text?: string;
+        query?: string;
         subject?: string;
         from?: string;
         to?: string;
@@ -25,6 +25,7 @@ export class EmailSearchAPI {
         dateFrom?: string;
         dateTo?: string;
         flags?: string[];
+        categories?: string[];
         page?: number;
         size?: number;
     }): Promise<any> {
@@ -32,12 +33,18 @@ export class EmailSearchAPI {
             const query: EmailSearchQuery = {};
 
             // Build search query
-            if (searchParams.text) query.text = searchParams.text;
+            if (searchParams.query) query.text = searchParams.query;  // Map query to text field
             if (searchParams.subject) query.subject = searchParams.subject;
             if (searchParams.from) query.from = searchParams.from;
             if (searchParams.to) query.to = searchParams.to;
             if (searchParams.account) query.accountName = searchParams.account;
             if (searchParams.folder) query.folder = searchParams.folder;
+            if (searchParams.categories) {
+                // Ensure categories is always treated as an array
+                query.categories = Array.isArray(searchParams.categories) 
+                    ? searchParams.categories 
+                    : [searchParams.categories];
+            }
             if (searchParams.flags) query.flags = searchParams.flags;
 
             // Parse dates

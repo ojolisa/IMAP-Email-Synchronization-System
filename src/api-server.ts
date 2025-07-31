@@ -54,17 +54,13 @@ app.get('/api/accounts', async (req, res) => {
 
 app.get('/api/categories', async (req, res) => {
     try {
-        // For now, return some sample categories
-        // TODO: Implement actual category retrieval from the AI service
+        // Return the actual categories used by the EmailCategorizationService
         res.json([
-            'Important',
-            'Work',
-            'Personal',
-            'Finance',
-            'Travel',
-            'Shopping',
-            'Social',
-            'Updates'
+            'INTERESTED',
+            'MEETING_BOOKED',
+            'NOT_INTERESTED',
+            'SPAM',
+            'OUT_OF_OFFICE'
         ]);
     } catch (error) {
         logger.error('Get categories error:', error);

@@ -5,7 +5,7 @@ import { emailApi } from './services/api';
 import { FolderList } from './components/FolderList';
 import { EmailListItem } from './components/EmailListItem';
 import { SearchBar } from './components/SearchBar';
-import type { Email, EmailSearchParams } from './types/email';
+import type { Email, EmailSearchParams, EmailCategory } from './types/email';
 
 function App() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
@@ -51,7 +51,7 @@ function App() {
   if (hasError) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert key="error-alert" severity="error" sx={{ mb: 2 }}>
           Error connecting to the backend server. Please make sure the API server is running at http://localhost:3000
         </Alert>
       </Container>
@@ -74,7 +74,7 @@ function App() {
       
       <SearchBar
         accounts={accounts || []}
-        categories={categories || []}
+        categories={categories || [] as EmailCategory[]}
         searchParams={searchParams}
         onSearchChange={setSearchParams}
       />
@@ -95,15 +95,16 @@ function App() {
             <CircularProgress />
           ) : (
             <Box>
-              {emails?.map((email) => (
-                <EmailListItem
-                  key={email.id}
-                  email={email}
-                  onClick={handleEmailClick}
-                />
-              ))}
-              {emails?.length === 0 && (
-                <Typography>No emails found</Typography>
+              {emails && emails.length > 0 ? (
+                emails.map((email) => (
+                  <EmailListItem
+                    key={email.id}
+                    email={email}
+                    onClick={handleEmailClick}
+                  />
+                ))
+              ) : (
+                <Typography key="no-emails-message">No emails found</Typography>
               )}
             </Box>
           )}
