@@ -1,0 +1,57 @@
+{
+  "info": {
+    "name": "IMAP Search API",
+    "description": "Collection for IMAP Search API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Search Emails",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/search",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "search"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"search term\",\n    \"subject\": \"email subject\",\n    \"from\": \"sender@example.com\",\n    \"to\": \"recipient@example.com\",\n    \"account\": \"account name\",\n    \"folder\": \"INBOX\",\n    \"dateFrom\": \"2025-01-01T00:00:00Z\",\n    \"dateTo\": \"2025-12-31T23:59:59Z\",\n    \"flags\": [\"\\\\Seen\", \"\\\\Flagged\"],\n    \"category\": \"INTERESTED\",\n    \"page\": 1,\n    \"size\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Search emails with various filters including text, subject, sender, recipient, date range, flags, and category (INTERESTED, MEETING_BOOKED, NOT_INTERESTED, SPAM, OUT_OF_OFFICE)."
+      }
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Check the health status of the IMAP Search API service."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL for the API server"
+    }
+  ]
+}
