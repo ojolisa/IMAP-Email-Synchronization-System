@@ -2,13 +2,26 @@ import Imap from 'imap';
 import { simpleParser } from 'mailparser';
 import { IMAPConfig, EmailMessage, IMAPAccount } from '../types';
 import { logger } from '../utils/logger';
+import { ElasticsearchService } from './ElasticsearchService';
 
 export class IMAPSyncManager {
     private accounts: IMAPAccount[] = [];
     private isRunning: boolean = false;
+    private elasticsearchService!: ElasticsearchService;
 
     constructor() {
         this.loadAccountsFromEnv();
+        this.initializeElasticsearch();
+    }
+
+    private initializeElasticsearch(): void {
+        const elasticsearchConfig = {
+            node: process.env.ELASTICSEARCH_NODE || 'http://localhost:9200',
+            index: process.env.ELASTICSEARCH_INDEX || 'imap-emails'
+        };
+
+        this.elasticsearchService = new ElasticsearchService(elasticsearchConfig);
+        logger.info(`Elasticsearch configured with node: ${elasticsearchConfig.node}, index: ${elasticsearchConfig.index}`);
     }
 
     private loadAccountsFromEnv(): void {
@@ -81,6 +94,15 @@ export class IMAPSyncManager {
 
         this.isRunning = true;
         logger.info('Starting IMAP synchronization for all accounts...');
+
+        // Initialize Elasticsearch
+        try {
+            await this.elasticsearchService.initialize();
+            logger.info('Elasticsearch initialized successfully');
+        } catch (error) {
+            logger.error('Failed to initialize Elasticsearch:', error);
+            // Continue without Elasticsearch if it fails
+        }
 
         // Connect to all accounts and start syncing
         const connectionPromises = this.accounts.map(account => this.connectAndSync(account));
@@ -350,13 +372,28 @@ export class IMAPSyncManager {
         // Log the email details
         logger.info(`Processing email: ${email.subject} from ${email.from} (${email.accountName})`);
         
-        // Here you can add additional processing logic:
-        // - Store in database
-        // - Index in Elasticsearch
-        // - Apply AI categorization
-        // - Send notifications
+        try {
+            // Check if email already exists in Elasticsearch
+            const exists = await this.elasticsearchService.emailExists(
+                email.accountName, 
+                email.folder, 
+                email.uid
+            );
+
+            if (!exists) {
+                // Index the email in Elasticsearch
+                await this.elasticsearchService.indexEmail(email);
+                logger.debug(`Successfully indexed email: ${email.subject}`);
+            } else {
+                logger.debug(`Email already indexed: ${email.subject}`);
+            }
+
+        } catch (error) {
+            logger.error(`Failed to index email ${email.messageId}:`, error);
+            // Continue processing even if indexing fails
+        }
         
-        // For now, just log the email details
+        // Log the email details for debugging
         console.log('Email Details:', {
             uid: email.uid,
             subject: email.subject,
@@ -382,6 +419,33 @@ export class IMAPSyncManager {
 
     public getTotalAccountsCount(): number {
         return this.accounts.length;
+    }
+
+    public async searchEmails(query: any, from: number = 0, size: number = 10): Promise<any> {
+        try {
+            return await this.elasticsearchService.searchEmails(query, from, size);
+        } catch (error) {
+            logger.error('Failed to search emails:', error);
+            throw error;
+        }
+    }
+
+    public async getEmailStats(): Promise<any> {
+        try {
+            return await this.elasticsearchService.getEmailStats();
+        } catch (error) {
+            logger.error('Failed to get email statistics:', error);
+            throw error;
+        }
+    }
+
+    public async getElasticsearchHealth(): Promise<any> {
+        try {
+            return await this.elasticsearchService.getHealth();
+        } catch (error) {
+            logger.error('Failed to get Elasticsearch health:', error);
+            throw error;
+        }
     }
 
     private async disconnectAccount(account: IMAPAccount): Promise<void> {

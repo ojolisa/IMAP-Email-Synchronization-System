@@ -7,6 +7,11 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
+    "search-demo": "ts-node src/search-demo.ts",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "elastic:health": "curl -X GET \"localhost:9200/_cluster/health?pretty\"",
     "clean": "rimraf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,6 +25,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@elastic/elasticsearch": "^8.19.0",
     "@types/imap": "^0.8.42",
     "@types/mailparser": "^3.4.6",
     "@types/node": "^24.1.0",
@@ -29,7 +35,6 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^8.15.0",
     "dotenv": "^17.2.1",
     "imap": "^0.8.19",
     "mailparser": "^3.7.4",
