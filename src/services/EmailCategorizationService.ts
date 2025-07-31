@@ -44,7 +44,7 @@ Categories defined:
 - MEETING_BOOKED: Email confirms, schedules, or books a meeting/appointment
 - NOT_INTERESTED: Email explicitly declines or expresses no interest
 - SPAM: Unsolicited marketing, promotional content, or suspicious emails
-- OUT_OF_OFFICE: Automated out-of-office or auto-reply messages
+- OUT_OF_OFFICE: Automated out-of-office or auto-reply messages and personal messages
 
 Email to classify:
 ${content}
