@@ -20,13 +20,54 @@ const syncManager = new IMAPSyncManager();
 const searchAPI = new EmailSearchAPI(syncManager);
 
 // API Routes
-app.post('/api/search', async (req, res) => {
+app.get('/api/emails/search', async (req, res) => {
     try {
-        const searchParams = req.body;
+        const searchParams = req.query;
         const results = await searchAPI.searchEmails(searchParams);
         res.json(results);
     } catch (error) {
         logger.error('Search error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/folders', async (req, res) => {
+    try {
+        const accountId = req.query.accountId as string | undefined;
+        const folders = await syncManager.getFolders(accountId);
+        res.json(folders);
+    } catch (error) {
+        logger.error('Get folders error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/accounts', async (req, res) => {
+    try {
+        const accounts = await syncManager.getAccounts();
+        res.json(accounts);
+    } catch (error) {
+        logger.error('Get accounts error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/categories', async (req, res) => {
+    try {
+        // For now, return some sample categories
+        // TODO: Implement actual category retrieval from the AI service
+        res.json([
+            'Important',
+            'Work',
+            'Personal',
+            'Finance',
+            'Travel',
+            'Shopping',
+            'Social',
+            'Updates'
+        ]);
+    } catch (error) {
+        logger.error('Get categories error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

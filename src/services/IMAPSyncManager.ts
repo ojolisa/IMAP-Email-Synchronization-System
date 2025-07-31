@@ -1,10 +1,11 @@
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import { IMAPConfig, EmailMessage, IMAPAccount, IndexedEmailWithCategory } from '../types';
+import { IMAPConfig, EmailMessage, IMAPAccount, IndexedEmailWithCategory, IMAPFolder, EmailFolder } from '../types';
 import { logger } from '../utils/logger';
 import { ElasticsearchService } from './ElasticsearchService';
 import { EmailCategorizationService } from './EmailCategorizationService';
 import { NotificationService } from './NotificationService';
+import { promisify } from 'util';
 
 export class IMAPSyncManager {
     private accounts: IMAPAccount[] = [];
@@ -12,12 +13,84 @@ export class IMAPSyncManager {
     private elasticsearchService!: ElasticsearchService;
     private categorizationService!: EmailCategorizationService;
     private notificationService!: NotificationService;
+    private folderCache: Map<string, IMAPFolder[]> = new Map();
 
     constructor() {
         this.loadAccountsFromEnv();
         this.initializeElasticsearch();
         this.initializeCategorization();
         this.notificationService = new NotificationService();
+    }
+
+    async getFolders(accountId?: string): Promise<EmailFolder[]> {
+        try {
+            const folders: EmailFolder[] = [];
+            
+            // If accountId is provided, only get folders for that account
+            const targetAccounts = accountId 
+                ? this.accounts.filter(acc => acc.config.user === accountId)
+                : this.accounts;
+
+            for (const account of targetAccounts) {
+                if (!account.isConnected) {
+                    // Connect if not already connected
+                    await this.connectToAccount(account);
+                }
+
+                const imapFolders = await this.getIMAPFolders(account);
+                folders.push(...imapFolders.map(folder => ({
+                    name: folder.name,
+                    count: folder.messageCount
+                })));
+            }
+
+            return folders;
+        } catch (error) {
+            logger.error('Error getting folders:', error);
+            throw error;
+        }
+    }
+
+    async getAccounts(): Promise<{ id: string; email: string; }[]> {
+        return this.accounts.map(account => ({
+            id: account.config.user,
+            email: `${account.config.user}@${account.config.host}`
+        }));
+    }
+
+    private async getIMAPFolders(account: IMAPAccount): Promise<IMAPFolder[]> {
+        return new Promise((resolve, reject) => {
+            const imap = account.connection;
+            
+            imap.getBoxes((err: Error | null, boxes: any) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                const folders: IMAPFolder[] = [];
+                
+                const processBoxes = (boxList: any, prefix = '') => {
+                    Object.keys(boxList).forEach((key) => {
+                        const box = boxList[key];
+                        const path = prefix + key;
+                        
+                        folders.push({
+                            name: path,
+                            path: path,
+                            messageCount: box.messages?.total || 0
+                        });
+
+                        if (box.children) {
+                            processBoxes(box.children, path + box.delimiter);
+                        }
+                    });
+                };
+
+                processBoxes(boxes);
+                resolve(folders);
+            });
+        });
     }
 
     private initializeElasticsearch(): void {
@@ -28,6 +101,31 @@ export class IMAPSyncManager {
 
         this.elasticsearchService = new ElasticsearchService(elasticsearchConfig);
         logger.info(`Elasticsearch configured with node: ${elasticsearchConfig.node}, index: ${elasticsearchConfig.index}`);
+    }
+
+    private async connectToAccount(account: IMAPAccount): Promise<void> {
+        if (account.isConnected) {
+            return;
+        }
+
+        return new Promise((resolve, reject) => {
+            const imap = new Imap(account.config);
+
+            imap.once('ready', () => {
+                account.connection = imap;
+                account.isConnected = true;
+                logger.info(`Connected to IMAP server for ${account.config.user}`);
+                resolve();
+            });
+
+            imap.once('error', (err: Error) => {
+                account.isConnected = false;
+                logger.error(`IMAP connection error for ${account.config.user}:`, err);
+                reject(err);
+            });
+
+            imap.connect();
+        });
     }
 
     private loadAccountsFromEnv(): void {
