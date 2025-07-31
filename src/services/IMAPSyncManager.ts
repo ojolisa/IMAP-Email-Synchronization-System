@@ -4,17 +4,20 @@ import { IMAPConfig, EmailMessage, IMAPAccount, IndexedEmailWithCategory } from 
 import { logger } from '../utils/logger';
 import { ElasticsearchService } from './ElasticsearchService';
 import { EmailCategorizationService } from './EmailCategorizationService';
+import { NotificationService } from './NotificationService';
 
 export class IMAPSyncManager {
     private accounts: IMAPAccount[] = [];
     private isRunning: boolean = false;
     private elasticsearchService!: ElasticsearchService;
     private categorizationService!: EmailCategorizationService;
+    private notificationService!: NotificationService;
 
     constructor() {
         this.loadAccountsFromEnv();
         this.initializeElasticsearch();
         this.initializeCategorization();
+        this.notificationService = new NotificationService();
     }
 
     private initializeElasticsearch(): void {
@@ -405,6 +408,11 @@ export class IMAPSyncManager {
                         const category = await this.categorizationService.categorizeEmail(email);
                         emailWithCategory.category = category;
                         logger.debug(`Email categorized as: ${category.category}`);
+                        
+                        // Send notifications for INTERESTED emails
+                        if (category.category === 'INTERESTED') {
+                            await this.notificationService.notifyInterestedEmail(emailWithCategory);
+                        }
                     } catch (error) {
                         logger.error(`Failed to categorize email ${email.messageId}:`, error);
                     }
