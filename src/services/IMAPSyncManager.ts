@@ -14,6 +14,7 @@ export class IMAPSyncManager {
     private categorizationService!: EmailCategorizationService;
     private notificationService!: NotificationService;
     private folderCache: Map<string, IMAPFolder[]> = new Map();
+    private lastProcessedUID: Map<string, number> = new Map(); // Track last processed UID per account
 
     constructor() {
         this.loadAccountsFromEnv();
@@ -252,7 +253,7 @@ export class IMAPSyncManager {
                         account.isConnected = true;
                         logger.info(`Connected to ${account.config.accountName}`);
 
-                        // Start syncing emails from the last 30 days
+                        // Start syncing only the last 10 emails
                         await this.syncRecentEmails(account);
 
                         // Set up IDLE mode for real-time updates
@@ -286,20 +287,6 @@ export class IMAPSyncManager {
 
     private async syncRecentEmails(account: IMAPAccount): Promise<void> {
         const imap = account.connection;
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        // Format date for IMAP search (DD-MMM-YYYY format)
-        const formatIMAPDate = (date: Date): string => {
-            const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-                           'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-            const day = date.getDate().toString().padStart(2, '0');
-            const month = months[date.getMonth()];
-            const year = date.getFullYear();
-            return `${day}-${month}-${year}`;
-        };
-
-        const formattedDate = formatIMAPDate(thirtyDaysAgo);
 
         return new Promise((resolve, reject) => {
             imap.openBox('INBOX', false, (error: Error, box: any) => {
@@ -309,29 +296,61 @@ export class IMAPSyncManager {
                     return;
                 }
 
-                logger.info(`Syncing emails from last 30 days for ${account.config.accountName}`);
+                logger.info(`Syncing last 10 emails for ${account.config.accountName}`);
 
-                // Search for emails from the last 30 days
-                // Use proper IMAP search syntax: [['SINCE', date]]
-                imap.search([['SINCE', formattedDate]], (error: Error, results: number[]) => {
-                    if (error) {
-                        logger.error(`Failed to search emails for ${account.config.accountName}:`, error);
-                        reject(error);
-                        return;
-                    }
+                // Get the total number of messages in the mailbox
+                const totalMessages = box.messages.total;
+                
+                if (totalMessages === 0) {
+                    logger.info(`No emails found for ${account.config.accountName}`);
+                    resolve();
+                    return;
+                }
 
-                    if (!results || results.length === 0) {
-                        logger.info(`No recent emails found for ${account.config.accountName}`);
+                // Calculate the range for the last 10 emails
+                const startSeq = Math.max(1, totalMessages - 9); // Get last 10 emails
+                const endSeq = totalMessages;
+                
+                logger.info(`Found ${totalMessages} total emails. Fetching emails ${startSeq} to ${endSeq} for ${account.config.accountName}`);
+
+                // Fetch the last 10 emails by sequence number
+                const fetch = imap.seq.fetch(`${startSeq}:${endSeq}`, {
+                    bodies: '',
+                    struct: true,
+                    envelope: true
+                });
+
+                const uids: number[] = [];
+                
+                fetch.on('message', (msg: any, seqno: number) => {
+                    msg.once('attributes', (attrs: any) => {
+                        uids.push(attrs.uid);
+                    });
+                });
+
+                fetch.once('error', (error: Error) => {
+                    logger.error(`Failed to fetch recent emails for ${account.config.accountName}:`, error);
+                    reject(error);
+                });
+
+                fetch.once('end', () => {
+                    if (uids.length > 0) {
+                        logger.info(`Found ${uids.length} recent emails to process for ${account.config.accountName}`);
+                        
+                        // Set the initial last processed UID to the highest UID from this batch
+                        const accountKey = `${account.config.accountName}-INBOX`;
+                        const maxUID = Math.max(...uids);
+                        this.lastProcessedUID.set(accountKey, maxUID);
+                        logger.info(`Set initial last processed UID to ${maxUID} for ${account.config.accountName}`);
+                        
+                        // Process emails using the collected UIDs
+                        this.fetchAndProcessEmails(account, uids, 'INBOX')
+                            .then(() => resolve())
+                            .catch(reject);
+                    } else {
+                        logger.info(`No recent emails to process for ${account.config.accountName}`);
                         resolve();
-                        return;
                     }
-
-                    logger.info(`Found ${results.length} recent emails for ${account.config.accountName}`);
-
-                    // Fetch and process emails
-                    this.fetchAndProcessEmails(account, results, 'INBOX')
-                        .then(() => resolve())
-                        .catch(reject);
                 });
             });
         });
@@ -431,17 +450,13 @@ export class IMAPSyncManager {
                         logger.info(`Email update received for ${account.config.accountName}, seqno: ${seqno}`);
                     });
 
-                    // Keep the connection alive with IDLE
+                    // Keep the connection alive with a simple ping, no email processing
                     setInterval(() => {
                         if (account.isConnected && imap.state === 'authenticated') {
-                            imap.search(['UNSEEN'], (error: Error, results: number[]) => {
-                                if (!error && results && results.length > 0) {
-                                    logger.info(`Found ${results.length} unseen emails for ${account.config.accountName}`);
-                                    this.fetchAndProcessEmails(account, results, 'INBOX');
-                                }
-                            });
+                            // Just check connection status, don't process emails
+                            logger.debug(`Connection check for ${account.config.accountName} - Status: ${imap.state}`);
                         }
-                    }, 30000); // Check every 30 seconds
+                    }, 300000); // Check every 5 minutes instead of 30 seconds
 
                 } catch (error) {
                     logger.error(`Failed to setup IDLE for ${account.config.accountName}:`, error);
@@ -454,16 +469,39 @@ export class IMAPSyncManager {
         const imap = account.connection;
 
         try {
-            // Search for unseen emails
-            imap.search(['UNSEEN'], (error: Error, results: number[]) => {
+            // Get the current mailbox state to find the newest emails
+            imap.openBox('INBOX', false, (error: Error, box: any) => {
                 if (error) {
-                    logger.error(`Failed to search for new emails in ${account.config.accountName}:`, error);
+                    logger.error(`Failed to open INBOX for new mail handling in ${account.config.accountName}:`, error);
                     return;
                 }
 
-                if (results && results.length > 0) {
-                    logger.info(`Processing ${results.length} new email(s) for ${account.config.accountName}`);
-                    this.fetchAndProcessEmails(account, results, 'INBOX');
+                const totalMessages = box.messages.total;
+                const accountKey = `${account.config.accountName}-INBOX`;
+                const lastProcessedUID = this.lastProcessedUID.get(accountKey) || 0;
+                
+                // Only fetch emails with UID higher than the last processed UID
+                if (totalMessages > 0) {
+                    // Search for emails with UID greater than last processed
+                    const searchCriteria = lastProcessedUID > 0 
+                        ? [['UID', `${lastProcessedUID + 1}:*`]]
+                        : [['UID', `${totalMessages}:*`]]; // If no last UID, get only the latest
+                    
+                    imap.search(searchCriteria, (searchError: Error, results: number[]) => {
+                        if (searchError) {
+                            logger.error(`Failed to search for new emails in ${account.config.accountName}:`, searchError);
+                            return;
+                        }
+
+                        if (results && results.length > 0) {
+                            logger.info(`Processing ${results.length} new email(s) with UIDs > ${lastProcessedUID} for ${account.config.accountName}`);
+                            this.fetchAndProcessEmails(account, results, 'INBOX');
+                        } else {
+                            logger.debug(`No new emails found for ${account.config.accountName}`);
+                        }
+                    });
+                } else {
+                    logger.info(`No emails in mailbox for ${account.config.accountName}`);
                 }
             });
 
@@ -495,6 +533,13 @@ export class IMAPSyncManager {
             );
 
             if (!exists) {
+                // Update the last processed UID for this account
+                const accountKey = `${email.accountName}-${email.folder}`;
+                const currentLastUID = this.lastProcessedUID.get(accountKey) || 0;
+                if (email.uid > currentLastUID) {
+                    this.lastProcessedUID.set(accountKey, email.uid);
+                }
+
                 // Categorize the email
                 let emailWithCategory: IndexedEmailWithCategory = { 
                     ...email,
@@ -505,7 +550,15 @@ export class IMAPSyncManager {
                     try {
                         const category = await this.categorizationService.categorizeEmail(email);
                         emailWithCategory.category = category;
-                        logger.debug(`Email categorized as: ${category.category}`);
+                        
+                        // Log the Gemini response along with the categorization
+                        logger.info(`Email categorized - Subject: "${email.subject}", Category: ${category.category}, Gemini Response: "${category.geminiResponse}"`);
+                        console.log(`📧 New Email Indexed:
+  Subject: ${email.subject}
+  From: ${email.from}
+  Category: ${category.category}
+  🤖 Gemini Response: "${category.geminiResponse}"
+  ⏰ Indexed at: ${new Date().toISOString()}`);
                         
                         // Send notifications for INTERESTED emails
                         if (category.category === 'INTERESTED') {
@@ -513,7 +566,15 @@ export class IMAPSyncManager {
                         }
                     } catch (error) {
                         logger.error(`Failed to categorize email ${email.messageId}:`, error);
+                        console.log(`❌ Failed to categorize email: ${email.subject} - ${error}`);
                     }
+                } else {
+                    // Log when categorization service is not available
+                    logger.info(`Email indexed without categorization - Subject: "${email.subject}"`);
+                    console.log(`📧 New Email Indexed (No Categorization):
+  Subject: ${email.subject}
+  From: ${email.from}
+  ⏰ Indexed at: ${new Date().toISOString()}`);
                 }
 
                 // Index the email with category in Elasticsearch

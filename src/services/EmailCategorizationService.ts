@@ -21,7 +21,7 @@ export class EmailCategorizationService {
         }
     }
 
-    private async classifyEmail(email: EmailMessage): Promise<CategoryLabel> {
+    private async classifyEmail(email: EmailMessage): Promise<{ category: CategoryLabel; rawResponse: string }> {
         try {
             // Prepare email content for classification
             const content = `
@@ -31,31 +31,61 @@ Body: ${email.body?.substring(0, 1000)}  // Limit content length
             `;
 
             // Prompt for email classification
-            const prompt = `Analyze this email and classify it into one of these categories:
-- INTERESTED: Shows genuine interest in product/service
-- MEETING_BOOKED: Confirms a meeting or appointment
-- NOT_INTERESTED: Clearly expresses lack of interest
-- SPAM: Unsolicited or spam content
-- OUT_OF_OFFICE: Auto-reply or out of office message
+            const prompt = `You are an email classifier. Your ONLY job is to return exactly one of these categories:
 
-Email Content:
+INTERESTED
+MEETING_BOOKED
+NOT_INTERESTED
+SPAM
+OUT_OF_OFFICE
+
+Categories defined:
+- INTERESTED: Email shows genuine interest in a product/service/opportunity
+- MEETING_BOOKED: Email confirms, schedules, or books a meeting/appointment
+- NOT_INTERESTED: Email explicitly declines or expresses no interest
+- SPAM: Unsolicited marketing, promotional content, or suspicious emails
+- OUT_OF_OFFICE: Automated out-of-office or auto-reply messages
+
+Email to classify:
 ${content}
 
-Return only one of these exact category labels: INTERESTED, MEETING_BOOKED, NOT_INTERESTED, SPAM, OUT_OF_OFFICE`;
+IMPORTANT: Respond with ONLY the category name. Do not include explanations, reasoning, or any other text. Just one word from the list above.
+
+Category:`;
 
             const response = await this.model.generateContent({
                 model: "gemini-2.5-flash",
-                contents: prompt
+                contents: prompt,
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 10,
+                    topP: 0.1,
+                    topK: 1
+                }
             });
-            const text = response.text.trim();
+            
+            const rawResponse = response.text;
+            let text = rawResponse.trim().toUpperCase();
 
-            // Validate the response is a valid category
-            if (this.isValidCategory(text)) {
-                return text as CategoryLabel;
-            } else {
-                logger.warn(`Invalid category returned by Gemini: ${text}, defaulting to SPAM`);
-                return 'SPAM';
+            // Extract just the category if there's extra text
+            const validCategories: CategoryLabel[] = [
+                'INTERESTED',
+                'MEETING_BOOKED',
+                'NOT_INTERESTED',
+                'SPAM',
+                'OUT_OF_OFFICE'
+            ];
+
+            // Try to find a valid category in the response
+            for (const category of validCategories) {
+                if (text.includes(category)) {
+                    return { category, rawResponse };
+                }
             }
+
+            // If no valid category found, log the full response and default to SPAM
+            logger.warn(`Invalid category returned by Gemini: ${rawResponse}, defaulting to SPAM`);
+            return { category: 'SPAM', rawResponse };
         } catch (error) {
             // Log the specific error for debugging
             logger.error('Error classifying email:', {
@@ -67,11 +97,11 @@ Return only one of these exact category labels: INTERESTED, MEETING_BOOKED, NOT_
             // For demonstration emails that are clearly categorizable, use basic rules
             const subject = email.subject.toLowerCase();
             if (subject.includes('out of office')) {
-                return 'OUT_OF_OFFICE';
+                return { category: 'OUT_OF_OFFICE', rawResponse: 'Fallback rule: out of office detected' };
             } else if (subject.includes('meeting confirmed')) {
-                return 'MEETING_BOOKED';
+                return { category: 'MEETING_BOOKED', rawResponse: 'Fallback rule: meeting confirmed detected' };
             } else if (subject.includes('make money fast')) {
-                return 'SPAM';
+                return { category: 'SPAM', rawResponse: 'Fallback rule: spam keywords detected' };
             }
             
             throw new Error('Unable to classify email and no fallback rule matched');
@@ -91,14 +121,15 @@ Return only one of these exact category labels: INTERESTED, MEETING_BOOKED, NOT_
 
     public async categorizeEmail(email: EmailMessage): Promise<EmailCategory> {
         try {
-            const category = await this.classifyEmail(email);
+            const result = await this.classifyEmail(email);
             const timestamp = new Date();
 
             return {
                 messageId: email.messageId,
-                category,
+                category: result.category,
                 confidence: 1.0,
-                categorizedAt: timestamp
+                categorizedAt: timestamp,
+                geminiResponse: result.rawResponse
             };
         } catch (error) {
             logger.error('Failed to categorize email:', {

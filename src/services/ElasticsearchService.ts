@@ -80,7 +80,8 @@ export class ElasticsearchService {
                                         messageId: { type: 'keyword' },
                                         category: { type: 'keyword' },
                                         confidence: { type: 'float' },
-                                        categorizedAt: { type: 'date' }
+                                        categorizedAt: { type: 'date' },
+                                        geminiResponse: { type: 'text' }
                                     }
                                 }
                             }

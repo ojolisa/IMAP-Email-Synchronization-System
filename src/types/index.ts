@@ -96,6 +96,7 @@ export interface EmailCategory {
     category: CategoryLabel;
     confidence: number;
     categorizedAt: Date;
+    geminiResponse?: string;
 }
 
 // Extend IndexedEmail to include categorization
