@@ -15,9 +15,31 @@ const port = process.env.API_PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize services
-const syncManager = new IMAPSyncManager();
-const searchAPI = new EmailSearchAPI(syncManager);
+// Global variables for services
+let syncManager: IMAPSyncManager;
+let searchAPI: EmailSearchAPI;
+
+// Initialize services function (similar to index.ts)
+async function initializeServices() {
+    try {
+        logger.info('Initializing IMAP services...');
+        
+        // Initialize IMAP sync manager
+        syncManager = new IMAPSyncManager();
+        
+        // Start synchronization for all configured accounts
+        await syncManager.start();
+        
+        // Initialize search API with the sync manager
+        searchAPI = new EmailSearchAPI(syncManager);
+        
+        logger.info('IMAP services initialized successfully');
+        
+    } catch (error) {
+        logger.error('Failed to initialize IMAP services:', error);
+        throw error;
+    }
+}
 
 // API Routes
 app.get('/api/emails/search', async (req, res) => {
@@ -85,7 +107,35 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
-// Start the server
-app.listen(port, () => {
-    logger.info(`API Server is running on port ${port}`);
+// Start the API server with proper initialization
+async function startAPIServer() {
+    try {
+        // First initialize all services (like index.ts does)
+        await initializeServices();
+        
+        // Start the Express server
+        app.listen(port, () => {
+            logger.info(`API Server is running on port ${port}`);
+            logger.info('API Server started successfully with initialized IMAP services');
+        });
+        
+        // Handle graceful shutdown
+        process.on('SIGINT', async () => {
+            logger.info('Shutting down API Server...');
+            if (syncManager) {
+                await syncManager.stop();
+            }
+            process.exit(0);
+        });
+        
+    } catch (error) {
+        logger.error('Failed to start API Server:', error);
+        process.exit(1);
+    }
+}
+
+// Start the application
+startAPIServer().catch((error) => {
+    logger.error('Unhandled error in API server startup:', error);
+    process.exit(1);
 });
