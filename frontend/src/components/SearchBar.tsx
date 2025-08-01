@@ -1,4 +1,5 @@
-import { TextField, Box, Autocomplete } from '@mui/material';
+import { TextField, Box, Autocomplete, InputAdornment } from '@mui/material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import type { EmailSearchParams, EmailAccount, EmailCategory } from '../types/email';
 
 interface SearchBarProps {
@@ -10,32 +11,62 @@ interface SearchBarProps {
 
 export const SearchBar = ({ accounts, categories, searchParams, onSearchChange }: SearchBarProps) => {
     return (
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Box sx={{ 
+            display: 'flex', 
+            gap: 2, 
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'stretch'
+        }}>
             <TextField
                 fullWidth
-                label="Search emails"
+                placeholder="Search your emails..."
                 value={searchParams.query}
                 onChange={(e) => onSearchChange({ ...searchParams, query: e.target.value })}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <SearchIcon color="action" />
+                        </InputAdornment>
+                    ),
+                }}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        bgcolor: 'background.paper'
+                    }
+                }}
             />
             <Autocomplete
-                style={{ width: 200 }}
+                sx={{ 
+                    minWidth: { xs: '100%', md: 220 },
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        bgcolor: 'background.paper'
+                    }
+                }}
                 options={accounts}
                 getOptionLabel={(option) => option.email}
                 value={accounts.find(acc => acc.id === searchParams.account) || null}
                 onChange={(_, newValue) => 
                     onSearchChange({ ...searchParams, account: newValue?.id })
                 }
-                renderInput={(params) => <TextField {...params} label="Account" />}
+                renderInput={(params) => <TextField {...params} placeholder="Select account" />}
             />
             <Autocomplete
                 multiple
-                style={{ width: 300 }}
+                sx={{ 
+                    minWidth: { xs: '100%', md: 300 },
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        bgcolor: 'background.paper'
+                    }
+                }}
                 options={categories}
                 value={searchParams.categories || []}
                 onChange={(_, newValue) => 
                     onSearchChange({ ...searchParams, categories: newValue })
                 }
-                renderInput={(params) => <TextField {...params} label="Categories" />}
+                renderInput={(params) => <TextField {...params} placeholder="Filter by categories" />}
                 renderOption={(props, option) => (
                     <li {...props} key={option}>
                         {option.split('_').map(word => 

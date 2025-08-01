@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { Box, Container, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Card } from '@mui/material';
 import { useQuery } from 'react-query';
 import { emailApi } from './services/api';
-import { FolderList } from './components/FolderList';
 import { EmailListItem } from './components/EmailListItem';
 import { EmailDetailView } from './components/EmailDetailView';
 import { SearchBar } from './components/SearchBar';
 import type { Email, EmailSearchParams, EmailCategory } from './types/email';
 
 function App() {
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [searchParams, setSearchParams] = useState<EmailSearchParams>({
     query: '',
@@ -17,11 +15,6 @@ function App() {
     account: undefined,
     categories: []
   });
-
-  const { data: folders, isLoading: foldersLoading } = useQuery(
-    ['folders', searchParams.account],
-    () => emailApi.getFolders(searchParams.account)
-  );
 
   const { data: accounts, isLoading: accountsLoading } = useQuery(
     'accounts',
@@ -46,24 +39,23 @@ function App() {
     setSelectedEmail(null);
   };
 
-  const { isError: foldersError } = useQuery(['folders', searchParams.account], () => emailApi.getFolders(searchParams.account));
   const { isError: accountsError } = useQuery('accounts', emailApi.getAccounts);
   const { isError: categoriesError } = useQuery('categories', emailApi.getCategories);
   const { isError: emailsError } = useQuery(['emails', searchParams], () => emailApi.search(searchParams));
 
-  const hasError = foldersError || accountsError || categoriesError || emailsError;
+  const hasError = accountsError || categoriesError || emailsError;
   
   if (hasError) {
     return (
-      <Container maxWidth="xl" sx={{ mt: 4 }}>
+      <Box sx={{ maxWidth: '100%', margin: '0 auto', mt: 4, px: 3 }}>
         <Alert key="error-alert" severity="error" sx={{ mb: 2 }}>
           Error connecting to the backend server. Please make sure the API server is running at http://localhost:3000
         </Alert>
-      </Container>
+      </Box>
     );
   }
 
-  if (foldersLoading || accountsLoading || categoriesLoading) {
+  if (accountsLoading || categoriesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
@@ -72,42 +64,55 @@ function App() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Email Client
-      </Typography>
-      
-      <SearchBar
-        accounts={accounts || []}
-        categories={categories || [] as EmailCategory[]}
-        searchParams={searchParams}
-        onSearchChange={setSearchParams}
-      />
-
-      <Box sx={{ display: 'flex', gap: 3, height: 'calc(100vh - 200px)' }}>
-        <Box sx={{ width: '25%' }}>
-          <FolderList
-            folders={folders || []}
-            selectedFolder={selectedFolder}
-            onFolderSelect={(folder) => {
-              setSelectedFolder(folder);
-              setSearchParams(prev => ({ ...prev, folder }));
-              setSelectedEmail(null); // Clear selected email when changing folders
-            }}
+    <Box sx={{ 
+      minHeight: '100vh', 
+      width: '100vw',
+      bgcolor: '#f8fafc',
+      py: 4,
+      px: 3,
+      margin: 0,
+      boxSizing: 'border-box'
+    }}>
+      <Box sx={{ width: '100%', margin: '0 auto' }}>
+        <Paper elevation={0} sx={{ 
+          p: 4, 
+          mb: 3, 
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          width: '100%'
+        }}>
+          <Typography variant="h3" component="h1" fontWeight="600" gutterBottom>
+            OneBox
+          </Typography>
+          <Typography variant="h6" component="p" sx={{ opacity: 0.9 }}>
+            Your unified email experience
+          </Typography>
+        </Paper>
+        
+        <Card elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3, width: '100%' }}>
+          <SearchBar
+            accounts={accounts || []}
+            categories={categories || [] as EmailCategory[]}
+            searchParams={searchParams}
+            onSearchChange={setSearchParams}
           />
-        </Box>
-        <Box sx={{ width: '75%', height: '100%' }}>
+        </Card>
+
+        <Card elevation={2} sx={{ borderRadius: 3, overflow: 'hidden', width: '100%' }}>
           {selectedEmail ? (
             <EmailDetailView 
               email={selectedEmail} 
               onBack={handleBackToList}
             />
           ) : (
-            <>
+            <Box sx={{ minHeight: '60vh', width: '100%' }}>
               {emailsLoading ? (
-                <CircularProgress />
+                <Box display="flex" justifyContent="center" alignItems="center" sx={{ py: 8 }}>
+                  <CircularProgress size={48} />
+                </Box>
               ) : (
-                <Box sx={{ height: '100%', overflow: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                   {emails && emails.length > 0 ? (
                     emails.map((email) => (
                       <EmailListItem
@@ -117,15 +122,29 @@ function App() {
                       />
                     ))
                   ) : (
-                    <Typography key="no-emails-message">No emails found</Typography>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      py: 8,
+                      color: 'text.secondary'
+                    }}>
+                      <Typography variant="h6" gutterBottom>
+                        No emails found
+                      </Typography>
+                      <Typography variant="body2">
+                        Try adjusting your search criteria
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
               )}
-            </>
+            </Box>
           )}
-        </Box>
+        </Card>
       </Box>
-    </Container>
+    </Box>
   );
 }
 

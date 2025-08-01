@@ -54,7 +54,13 @@ export const EmailDetailView = ({ email, onBack }: EmailDetailViewProps) => {
     const displayCategory = email.category?.category || (email.categories && email.categories[0]);
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ 
+            height: '100%', 
+            width: '100%',
+            display: 'flex', 
+            flexDirection: 'column',
+            p: 3
+        }}>
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <IconButton onClick={onBack} sx={{ mr: 1 }}>
@@ -66,7 +72,7 @@ export const EmailDetailView = ({ email, onBack }: EmailDetailViewProps) => {
             </Box>
 
             {/* Email Content */}
-            <Paper sx={{ p: 3, flexGrow: 1, overflow: 'auto' }}>
+            <Paper sx={{ p: 3, flexGrow: 1, overflow: 'auto', width: '100%' }}>
                 {/* Subject */}
                 <Typography variant="h5" component="h1" gutterBottom>
                     {email.subject}
