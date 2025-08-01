@@ -21,7 +21,8 @@ export const emailApi = {
         const { data } = await api.get('/emails/search', {
             params: {
                 ...params,
-                categories: params.categories?.join(',') // Convert array to comma-separated string
+                categories: params.categories?.join(','), // Convert array to comma-separated string
+                size: params.size || 1000 // Default to 1000 emails if not specified
             }
         });
         return data.results || [];

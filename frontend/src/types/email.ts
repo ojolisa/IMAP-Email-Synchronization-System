@@ -40,6 +40,7 @@ export interface EmailSearchParams {
     folder?: string;
     account?: string;
     categories?: EmailCategory[];
+    size?: number;
 }
 
 export interface ReplyTemplate {

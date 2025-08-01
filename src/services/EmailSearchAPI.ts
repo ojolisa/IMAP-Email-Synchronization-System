@@ -62,7 +62,7 @@ export class EmailSearchAPI {
 
             // Pagination
             const page = searchParams.page || 1;
-            const size = Math.min(searchParams.size || 10, 100); // Max 100 results per page
+            const size = Math.min(searchParams.size || 10, 5000); // Max 5000 results per page
             const from = (page - 1) * size;
 
             const results = await this.syncManager.searchEmails(query, from, size);
