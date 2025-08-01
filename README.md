@@ -449,10 +449,6 @@ Ensure all required environment variables are set:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
-
 ## 🆘 Troubleshooting
 
 ### Common Issues
