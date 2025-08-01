@@ -47,24 +47,6 @@ export const SuggestedRepliesComponent: React.FC<SuggestedRepliesProps> = ({
         }
     };
 
-    const testWithSampleData = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const replies = await emailApi.testSuggestedReplies();
-            if (replies && replies.length > 0) {
-                setSuggestedReply(replies[0]);
-            } else {
-                setError('No reply could be generated');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error occurred');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -84,15 +66,6 @@ export const SuggestedRepliesComponent: React.FC<SuggestedRepliesProps> = ({
                     startIcon={loading ? <CircularProgress size={16} /> : null}
                 >
                     {loading ? 'Generating...' : 'Generate Reply'}
-                </Button>
-                
-                <Button
-                    variant="outlined"
-                    color="success"
-                    onClick={testWithSampleData}
-                    disabled={loading}
-                >
-                    Test with Sample
                 </Button>
             </Box>
 
