@@ -28,7 +28,12 @@ function App() {
 
   const { data: emails, isLoading: emailsLoading } = useQuery(
     ['emails', searchParams],
-    () => emailApi.search(searchParams)
+    () => emailApi.search(searchParams),
+    {
+      refetchInterval: 30000, // Refetch every 30 seconds
+      refetchIntervalInBackground: false, // Only refetch when tab is active
+      refetchOnWindowFocus: true, // Refetch when user returns to tab
+    }
   );
 
   const handleEmailClick = (email: Email) => {
