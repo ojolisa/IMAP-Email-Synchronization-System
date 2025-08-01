@@ -6,10 +6,14 @@ import {
     Stack, 
     Divider, 
     IconButton,
-    Alert
+    Alert,
+    Tabs,
+    Tab
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import type { Email, EmailCategory } from '../types/email';
+import { useState } from 'react';
+import type { Email, EmailCategory, SuggestedReply } from '../types/email';
+import { SuggestedRepliesComponent } from './SuggestedRepliesComponent';
 
 interface EmailDetailViewProps {
     email: Email;
@@ -52,6 +56,18 @@ const getCategoryDescription = (category: EmailCategory): string => {
 
 export const EmailDetailView = ({ email, onBack }: EmailDetailViewProps) => {
     const displayCategory = email.category?.category || (email.categories && email.categories[0]);
+    const [tabValue, setTabValue] = useState(0);
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+        setTabValue(newValue);
+    };
+
+    const handleReplySelect = (reply: SuggestedReply) => {
+        // In a real application, this would open a compose window or copy to clipboard
+        console.log('Selected reply:', reply);
+        navigator.clipboard.writeText(`Subject: ${reply.subject}\n\nBody:\n${reply.body}`);
+        alert('Reply copied to clipboard!');
+    };
 
     return (
         <Box sx={{ 
@@ -71,8 +87,18 @@ export const EmailDetailView = ({ email, onBack }: EmailDetailViewProps) => {
                 </Typography>
             </Box>
 
-            {/* Email Content */}
-            <Paper sx={{ p: 3, flexGrow: 1, overflow: 'auto', width: '100%' }}>
+            {/* Tabs */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                <Tabs value={tabValue} onChange={handleTabChange}>
+                    <Tab label="📧 Email Content" />
+                    <Tab label="🤖 AI Suggested Replies" />
+                </Tabs>
+            </Box>
+
+            {/* Tab Content */}
+            {tabValue === 0 && (
+                <Paper sx={{ p: 3, flexGrow: 1, overflow: 'auto', width: '100%' }}>
+                    {/* Email Content - existing content */}
                 {/* Subject */}
                 <Typography variant="h5" component="h1" gutterBottom>
                     {email.subject}
@@ -161,7 +187,18 @@ export const EmailDetailView = ({ email, onBack }: EmailDetailViewProps) => {
                         </Stack>
                     </Box>
                 )}
-            </Paper>
+                </Paper>
+            )}
+
+            {/* AI Suggested Replies Tab */}
+            {tabValue === 1 && (
+                <Box sx={{ flexGrow: 1, overflow: 'auto', width: '100%' }}>
+                    <SuggestedRepliesComponent
+                        emailId={email.messageId}
+                        onReplySelect={handleReplySelect}
+                    />
+                </Box>
+            )}
         </Box>
     );
 };

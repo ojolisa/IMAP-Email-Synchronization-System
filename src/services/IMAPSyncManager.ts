@@ -643,6 +643,15 @@ export class IMAPSyncManager {
         }
     }
 
+    public async getEmailByMessageId(messageId: string): Promise<any> {
+        try {
+            return await this.elasticsearchService.getEmailByMessageId(messageId);
+        } catch (error) {
+            logger.error('Failed to get email by messageId:', error);
+            throw error;
+        }
+    }
+
     public async getEmailStats(): Promise<any> {
         try {
             return await this.elasticsearchService.getEmailStats();

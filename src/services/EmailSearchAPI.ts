@@ -193,4 +193,32 @@ export class EmailSearchAPI {
 
         return this.searchEmails(searchParams);
     }
+
+    /**
+     * Get a specific email by messageId
+     */
+    async getEmailByMessageId(messageId: string): Promise<any> {
+        try {
+            const email = await this.syncManager.getEmailByMessageId(messageId);
+            
+            if (email) {
+                return {
+                    success: true,
+                    email: email
+                };
+            } else {
+                return {
+                    success: false,
+                    error: 'Email not found'
+                };
+            }
+
+        } catch (error) {
+            logger.error('Failed to get email by messageId:', error);
+            return {
+                success: false,
+                error: 'Search failed'
+            };
+        }
+    }
 }

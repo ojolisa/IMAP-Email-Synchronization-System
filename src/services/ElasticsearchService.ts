@@ -299,6 +299,36 @@ export class ElasticsearchService {
     }
 
     /**
+     * Get a specific email by messageId
+     */
+    async getEmailByMessageId(messageId: string): Promise<IndexedEmail | null> {
+        try {
+            const response = await this.client.search({
+                index: this.index,
+                body: {
+                    query: {
+                        term: {
+                            messageId: messageId
+                        }
+                    },
+                    size: 1
+                }
+            });
+
+            const hits = response.hits.hits;
+            if (hits && hits.length > 0) {
+                return hits[0]._source as IndexedEmail;
+            }
+
+            return null;
+
+        } catch (error) {
+            logger.error(`Failed to get email by messageId ${messageId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Get aggregated statistics by account and folder
      */
     async getEmailStats(): Promise<any> {

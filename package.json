@@ -16,6 +16,8 @@
     "elastic:health": "curl -X GET \"localhost:9200/_cluster/health?pretty\"",
     "elastic:delete-index": "ts-node scripts/delete-index.ts",
     "test-gemini": "ts-node scripts/test-gemini-response.ts",
+    "test-ai-replies": "ts-node scripts/test-ai-suggested-replies.ts",
+    "demo-ai-replies": "ts-node scripts/demo-ai-suggested-replies.ts",
     "clean": "rimraf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -43,10 +45,12 @@
   },
   "dependencies": {
     "@google/genai": "^1.12.0",
+    "@lancedb/lancedb": "^0.21.2",
     "axios": "^1.11.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "faiss-node": "^0.5.1",
     "imap": "^0.8.19",
     "mailparser": "^3.7.4",
     "socket.io": "^4.8.1",

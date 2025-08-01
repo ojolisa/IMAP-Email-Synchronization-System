@@ -91,7 +91,7 @@ function App() {
             OneBox
           </Typography>
           <Typography variant="h6" component="p" sx={{ opacity: 0.9 }}>
-            Your unified email experience
+            Your unified email experience with AI-powered insights
           </Typography>
         </Paper>
         

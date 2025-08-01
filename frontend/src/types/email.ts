@@ -41,3 +41,22 @@ export interface EmailSearchParams {
     account?: string;
     categories?: EmailCategory[];
 }
+
+export interface ReplyTemplate {
+    id: string;
+    context: string;
+    template: string;
+    category: string;
+    metadata?: Record<string, any>;
+}
+
+export interface SuggestedReply {
+    id: string;
+    subject: string;
+    body: string;
+}
+
+export interface ReplyGenerationOptions {
+    personalizeToSender?: boolean;
+    includeOriginalEmail?: boolean;
+}

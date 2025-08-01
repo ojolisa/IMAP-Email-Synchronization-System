@@ -99,6 +99,31 @@ export interface EmailCategory {
     geminiResponse?: string;
 }
 
+export interface ReplyTemplate {
+    id: string;
+    context: string;
+    template: string;
+    category: string;
+    embedding?: number[];
+    metadata?: Record<string, any>;
+}
+
+export interface SuggestedReply {
+    id: string;
+    subject: string;
+    body: string;
+    confidence: number;
+    templateUsed?: ReplyTemplate;
+    reasoning: string;
+}
+
+export interface ReplyGenerationOptions {
+    maxReplies?: number;
+    minConfidence?: number;
+    personalizeToSender?: boolean;
+    includeOriginalEmail?: boolean;
+}
+
 // Extend IndexedEmail to include categorization
 export interface IndexedEmailWithCategory extends IndexedEmail {
     category?: EmailCategory;
