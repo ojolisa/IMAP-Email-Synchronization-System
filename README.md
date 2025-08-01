@@ -2,6 +2,8 @@
 
 A sophisticated real-time IMAP email synchronization system with AI-powered features, built with TypeScript, Express.js, React, and Elasticsearch.
 
+**Demo Video**: [Drive Link](https://drive.google.com/file/d/1lOFLuCvnX8mr4mrrqVSXKkvmQQYSF4ps/view?usp=sharing)! 
+
 ## 🚀 Features
 
 ### Core Features
