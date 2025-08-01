@@ -246,6 +246,13 @@ export class ElasticsearchService {
                 });
             }
 
+            // Add categories filter
+            if (query.categories && query.categories.length > 0) {
+                searchBody.query.bool.filter.push({
+                    terms: { 'category.category': query.categories }
+                });
+            }
+
             // Add date range filter
             if (query.dateFrom || query.dateTo) {
                 const dateRange: any = {};

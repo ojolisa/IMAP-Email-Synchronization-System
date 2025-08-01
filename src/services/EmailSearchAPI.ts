@@ -25,7 +25,7 @@ export class EmailSearchAPI {
         dateFrom?: string;
         dateTo?: string;
         flags?: string[];
-        categories?: string[];
+        categories?: string[] | string;
         page?: number;
         size?: number;
     }): Promise<any> {
@@ -40,10 +40,15 @@ export class EmailSearchAPI {
             if (searchParams.account) query.accountName = searchParams.account;
             if (searchParams.folder) query.folder = searchParams.folder;
             if (searchParams.categories) {
-                // Ensure categories is always treated as an array
-                query.categories = Array.isArray(searchParams.categories) 
-                    ? searchParams.categories 
-                    : [searchParams.categories];
+                // Handle categories - could be array, string, or comma-separated string
+                if (Array.isArray(searchParams.categories)) {
+                    query.categories = searchParams.categories;
+                } else if (typeof searchParams.categories === 'string') {
+                    // Split comma-separated string into array
+                    query.categories = searchParams.categories.split(',').map((cat: string) => cat.trim()).filter((cat: string) => cat);
+                } else {
+                    query.categories = [searchParams.categories as string];
+                }
             }
             if (searchParams.flags) query.flags = searchParams.flags;
 
