@@ -71,8 +71,8 @@ export class IMAPSyncManager {
 
     async getAccounts(): Promise<{ id: string; email: string; }[]> {
         return this.accounts.map(account => ({
-            id: account.config.user,
-            email: `${account.config.user}@${account.config.host}`
+            id: account.config.accountName,
+            email: account.config.user
         }));
     }
 
