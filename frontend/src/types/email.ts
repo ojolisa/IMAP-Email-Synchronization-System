@@ -1,13 +1,26 @@
 export interface Email {
     id: string;
+    uid: number;
+    messageId: string;
     subject: string;
     from: string;
-    to: string[];
+    to: string | string[];
     date: string;
     body: string;
     folder: string;
     account: string;
+    accountName: string;
     categories: EmailCategory[];
+    category?: EmailCategoryInfo;
+    flags: string[];
+}
+
+export interface EmailCategoryInfo {
+    messageId: string;
+    category: EmailCategory;
+    confidence: number;
+    categorizedAt: string;
+    geminiResponse?: string;
 }
 
 export interface EmailFolder {

@@ -4,11 +4,13 @@ import { useQuery } from 'react-query';
 import { emailApi } from './services/api';
 import { FolderList } from './components/FolderList';
 import { EmailListItem } from './components/EmailListItem';
+import { EmailDetailView } from './components/EmailDetailView';
 import { SearchBar } from './components/SearchBar';
 import type { Email, EmailSearchParams, EmailCategory } from './types/email';
 
 function App() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [searchParams, setSearchParams] = useState<EmailSearchParams>({
     query: '',
     folder: undefined,
@@ -37,8 +39,11 @@ function App() {
   );
 
   const handleEmailClick = (email: Email) => {
-    // TODO: Implement email detail view
-    console.log('Email clicked:', email);
+    setSelectedEmail(email);
+  };
+
+  const handleBackToList = () => {
+    setSelectedEmail(null);
   };
 
   const { isError: foldersError } = useQuery(['folders', searchParams.account], () => emailApi.getFolders(searchParams.account));
@@ -79,7 +84,7 @@ function App() {
         onSearchChange={setSearchParams}
       />
 
-      <Box sx={{ display: 'flex', gap: 3 }}>
+      <Box sx={{ display: 'flex', gap: 3, height: 'calc(100vh - 200px)' }}>
         <Box sx={{ width: '25%' }}>
           <FolderList
             folders={folders || []}
@@ -87,26 +92,36 @@ function App() {
             onFolderSelect={(folder) => {
               setSelectedFolder(folder);
               setSearchParams(prev => ({ ...prev, folder }));
+              setSelectedEmail(null); // Clear selected email when changing folders
             }}
           />
         </Box>
-        <Box sx={{ width: '75%' }}>
-          {emailsLoading ? (
-            <CircularProgress />
+        <Box sx={{ width: '75%', height: '100%' }}>
+          {selectedEmail ? (
+            <EmailDetailView 
+              email={selectedEmail} 
+              onBack={handleBackToList}
+            />
           ) : (
-            <Box>
-              {emails && emails.length > 0 ? (
-                emails.map((email) => (
-                  <EmailListItem
-                    key={email.id}
-                    email={email}
-                    onClick={handleEmailClick}
-                  />
-                ))
+            <>
+              {emailsLoading ? (
+                <CircularProgress />
               ) : (
-                <Typography key="no-emails-message">No emails found</Typography>
+                <Box sx={{ height: '100%', overflow: 'auto' }}>
+                  {emails && emails.length > 0 ? (
+                    emails.map((email) => (
+                      <EmailListItem
+                        key={email.messageId || email.uid}
+                        email={email}
+                        onClick={handleEmailClick}
+                      />
+                    ))
+                  ) : (
+                    <Typography key="no-emails-message">No emails found</Typography>
+                  )}
+                </Box>
               )}
-            </Box>
+            </>
           )}
         </Box>
       </Box>

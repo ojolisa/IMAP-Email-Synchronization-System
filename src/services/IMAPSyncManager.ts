@@ -39,10 +39,27 @@ export class IMAPSyncManager {
                 }
 
                 const imapFolders = await this.getIMAPFolders(account);
-                folders.push(...imapFolders.map(folder => ({
-                    name: folder.name,
-                    count: folder.messageCount
-                })));
+                
+                // Get email counts from Elasticsearch for each folder
+                for (const folder of imapFolders) {
+                    try {
+                        const countResult = await this.elasticsearchService.searchEmails({
+                            accountName: account.config.accountName,
+                            folder: folder.name
+                        }, 0, 0);
+                        
+                        folders.push({
+                            name: folder.name,
+                            count: countResult.total
+                        });
+                    } catch (error) {
+                        logger.warn(`Failed to get count for folder ${folder.name}: ${error}`);
+                        folders.push({
+                            name: folder.name,
+                            count: 0
+                        });
+                    }
+                }
             }
 
             return folders;
