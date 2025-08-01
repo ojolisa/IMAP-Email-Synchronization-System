@@ -1,278 +1,438 @@
 {
-  "info": {
-    "name": "IMAP Search API",
-    "description": "Collection for IMAP Search API endpoints",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Search Emails",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/emails/search?query=meeting&subject=&from=&to=&account=&folder=INBOX&dateFrom=2025-01-01T00:00:00Z&dateTo=2025-12-31T23:59:59Z&flags=\\Seen&categories=INTERESTED&page=1&size=10",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "emails", "search"],
-          "query": [
-            {
-              "key": "query",
-              "value": "meeting",
-              "description": "Full-text search term"
-            },
-            {
-              "key": "subject",
-              "value": "",
-              "description": "Email subject filter"
-            },
-            {
-              "key": "from",
-              "value": "",
-              "description": "Sender email filter"
-            },
-            {
-              "key": "to",
-              "value": "",
-              "description": "Recipient email filter"
-            },
-            {
-              "key": "account",
-              "value": "",
-              "description": "Account name filter"
-            },
-            {
-              "key": "folder",
-              "value": "INBOX",
-              "description": "Folder name filter"
-            },
-            {
-              "key": "dateFrom",
-              "value": "2025-01-01T00:00:00Z",
-              "description": "Start date for date range filter"
-            },
-            {
-              "key": "dateTo",
-              "value": "2025-12-31T23:59:59Z",
-              "description": "End date for date range filter"
-            },
-            {
-              "key": "flags",
-              "value": "\\Seen",
-              "description": "Email flags filter"
-            },
-            {
-              "key": "categories",
-              "value": "INTERESTED",
-              "description": "Email categories (INTERESTED, MEETING_BOOKED, NOT_INTERESTED, SPAM, OUT_OF_OFFICE)"
-            },
-            {
-              "key": "page",
-              "value": "1",
-              "description": "Page number for pagination"
-            },
-            {
-              "key": "size",
-              "value": "10",
-              "description": "Number of results per page (max 100)"
-            }
-          ]
-        },
-        "description": "Search emails with various filters using query parameters. All parameters are optional."
-      }
-    },
-    {
-      "name": "Get Folders",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/folders?accountId=",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "folders"],
-          "query": [
-            {
-              "key": "accountId",
-              "value": "",
-              "description": "Optional account ID to filter folders"
-            }
-          ]
-        },
-        "description": "Get list of available folders, optionally filtered by account ID."
-      }
-    },
-    {
-      "name": "Get Accounts",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/accounts",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "accounts"]
-        },
-        "description": "Get list of configured IMAP accounts."
-      }
-    },
-    {
-      "name": "Get Categories",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/categories",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "categories"]
-        },
-        "description": "Get list of available email categories for classification."
-      }
-    },
-    {
-      "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
-        },
-        "description": "Check the health status of the IMAP Search API service."
-      }
-    },
-    {
-      "name": "Search - Simple Text Query",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/emails/search?query=important",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "emails", "search"],
-          "query": [
-            {
-              "key": "query",
-              "value": "important",
-              "description": "Simple full-text search"
-            }
-          ]
-        },
-        "description": "Simple full-text search example."
-      }
-    },
-    {
-      "name": "Search - By Sender",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/emails/search?from=example@company.com&page=1&size=20",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "emails", "search"],
-          "query": [
-            {
-              "key": "from",
-              "value": "example@company.com",
-              "description": "Search emails from specific sender"
-            },
-            {
-              "key": "page",
-              "value": "1",
-              "description": "Page number"
-            },
-            {
-              "key": "size",
-              "value": "20",
-              "description": "Results per page"
-            }
-          ]
-        },
-        "description": "Search emails by sender with pagination."
-      }
-    },
-    {
-      "name": "Search - By Date Range",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/emails/search?dateFrom=2025-07-01T00:00:00Z&dateTo=2025-07-31T23:59:59Z&page=1&size=10",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "emails", "search"],
-          "query": [
-            {
-              "key": "dateFrom",
-              "value": "2025-07-01T00:00:00Z",
-              "description": "Start date"
-            },
-            {
-              "key": "dateTo",
-              "value": "2025-07-31T23:59:59Z",
-              "description": "End date"
-            },
-            {
-              "key": "page",
-              "value": "1",
-              "description": "Page number"
-            },
-            {
-              "key": "size",
-              "value": "10",
-              "description": "Results per page"
-            }
-          ]
-        },
-        "description": "Search emails within a specific date range."
-      }
-    },
-    {
-      "name": "Search - By Category",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/emails/search?categories=MEETING_BOOKED&page=1&size=10",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "emails", "search"],
-          "query": [
-            {
-              "key": "categories",
-              "value": "MEETING_BOOKED",
-              "description": "Filter by category (INTERESTED, MEETING_BOOKED, NOT_INTERESTED, SPAM, OUT_OF_OFFICE)"
-            },
-            {
-              "key": "page",
-              "value": "1",
-              "description": "Page number"
-            },
-            {
-              "key": "size",
-              "value": "10",
-              "description": "Results per page"
-            }
-          ]
-        },
-        "description": "Search emails by category classification."
-      }
-    }
-  ],
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000",
-      "type": "string",
-      "description": "Base URL for the API server"
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Set up common headers or authentication if needed",
-          "// pm.request.headers.add({key: 'Authorization', value: 'Bearer token'});"
-        ]
-      }
-    }
-  ]
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789abc",
+		"name": "IMAP Email Sync API",
+		"description": "Collection for IMAP Email Synchronization API with AI-powered features including email search, folder management, AI suggested replies, and reply template management.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/health",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"health"
+					]
+				},
+				"description": "Health check endpoint to verify API status"
+			},
+			"response": []
+		},
+		{
+			"name": "Email Search",
+			"folder": "Email Operations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/emails/search?text={{search_text}}&from={{from_email}}&subject={{subject}}&folder={{folder_name}}&accountName={{account_name}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"emails",
+						"search"
+					],
+					"query": [
+						{
+							"key": "text",
+							"value": "{{search_text}}",
+							"description": "Text search across email body and subject"
+						},
+						{
+							"key": "from",
+							"value": "{{from_email}}",
+							"description": "Filter by sender email"
+						},
+						{
+							"key": "subject",
+							"value": "{{subject}}",
+							"description": "Filter by subject"
+						},
+						{
+							"key": "to",
+							"value": "{{to_email}}",
+							"description": "Filter by recipient email",
+							"disabled": true
+						},
+						{
+							"key": "folder",
+							"value": "{{folder_name}}",
+							"description": "Filter by folder name"
+						},
+						{
+							"key": "accountName",
+							"value": "{{account_name}}",
+							"description": "Filter by account name"
+						},
+						{
+							"key": "categories",
+							"value": "INTERESTED,MEETING_BOOKED",
+							"description": "Filter by email categories (comma-separated)",
+							"disabled": true
+						},
+						{
+							"key": "dateFrom",
+							"value": "2024-01-01",
+							"description": "Filter emails from this date (YYYY-MM-DD)",
+							"disabled": true
+						},
+						{
+							"key": "dateTo",
+							"value": "2024-12-31",
+							"description": "Filter emails to this date (YYYY-MM-DD)",
+							"disabled": true
+						},
+						{
+							"key": "flags",
+							"value": "SEEN,FLAGGED",
+							"description": "Filter by email flags (comma-separated)",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Search emails with various filters including text, sender, subject, folder, account, categories, date range, and flags"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Folders",
+			"folder": "Folder Management",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/folders?accountId={{account_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"folders"
+					],
+					"query": [
+						{
+							"key": "accountId",
+							"value": "{{account_id}}",
+							"description": "Optional: Filter folders by account ID"
+						}
+					]
+				},
+				"description": "Get all folders or folders for a specific account"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Folders",
+			"folder": "Folder Management",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/folders",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"folders"
+					]
+				},
+				"description": "Get all folders from all accounts"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Accounts",
+			"folder": "Account Management",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/accounts",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"accounts"
+					]
+				},
+				"description": "Get all configured IMAP accounts"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Categories",
+			"folder": "Email Categories",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/categories",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"categories"
+					]
+				},
+				"description": "Get all available email categories"
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Suggested Replies",
+			"folder": "AI Suggested Replies",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"maxReplies\": 3,\n    \"minConfidence\": 0.7,\n    \"personalizeToSender\": true,\n    \"includeOriginalEmail\": false\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/emails/{{message_id}}/suggested-replies",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"emails",
+						"{{message_id}}",
+						"suggested-replies"
+					]
+				},
+				"description": "Generate AI-powered suggested replies for a specific email message"
+			},
+			"response": []
+		},
+		{
+			"name": "Test Suggested Replies",
+			"folder": "AI Suggested Replies",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/suggested-replies/test",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"suggested-replies",
+						"test"
+					]
+				},
+				"description": "Test suggested replies functionality with sample email data"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Reply Templates",
+			"folder": "Reply Template Management",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reply-templates",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reply-templates"
+					]
+				},
+				"description": "Get all reply templates"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Reply Template",
+			"folder": "Reply Template Management",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"context\": \"Meeting request response\",\n    \"template\": \"Thank you for the meeting invitation. I'll check my calendar and get back to you shortly.\",\n    \"category\": \"MEETING_BOOKED\",\n    \"metadata\": {\n        \"tone\": \"professional\",\n        \"urgency\": \"medium\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/reply-templates",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reply-templates"
+					]
+				},
+				"description": "Create a new reply template"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Reply Template",
+			"folder": "Reply Template Management",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"context\": \"Updated meeting request response\",\n    \"template\": \"Thank you for the meeting invitation. I'm available and looking forward to our discussion.\",\n    \"category\": \"MEETING_BOOKED\",\n    \"metadata\": {\n        \"tone\": \"professional\",\n        \"urgency\": \"high\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/reply-templates/{{template_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reply-templates",
+						"{{template_id}}"
+					]
+				},
+				"description": "Update an existing reply template"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Reply Template",
+			"folder": "Reply Template Management",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/reply-templates/{{template_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"reply-templates",
+						"{{template_id}}"
+					]
+				},
+				"description": "Delete a reply template"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string",
+			"description": "Base URL for the IMAP API server"
+		},
+		{
+			"key": "search_text",
+			"value": "meeting",
+			"type": "string",
+			"description": "Sample search text for email search"
+		},
+		{
+			"key": "from_email",
+			"value": "example@domain.com",
+			"type": "string",
+			"description": "Sample sender email for filtering"
+		},
+		{
+			"key": "subject",
+			"value": "Important",
+			"type": "string",
+			"description": "Sample subject text for filtering"
+		},
+		{
+			"key": "to_email",
+			"value": "recipient@domain.com",
+			"type": "string",
+			"description": "Sample recipient email for filtering"
+		},
+		{
+			"key": "folder_name",
+			"value": "INBOX",
+			"type": "string",
+			"description": "Sample folder name for filtering"
+		},
+		{
+			"key": "account_name",
+			"value": "primary",
+			"type": "string",
+			"description": "Sample account name for filtering"
+		},
+		{
+			"key": "account_id",
+			"value": "account-1",
+			"type": "string",
+			"description": "Sample account ID for folder filtering"
+		},
+		{
+			"key": "message_id",
+			"value": "sample-message-id",
+			"type": "string",
+			"description": "Sample message ID for suggested replies"
+		},
+		{
+			"key": "template_id",
+			"value": "template-123",
+			"type": "string",
+			"description": "Sample template ID for template operations"
+		}
+	]
 }
