@@ -4,7 +4,8 @@
   "description": "Real-time IMAP email synchronization system with persistent connections",
   "main": "dist/index.js",
   "scripts": {
-    "dev:all": "concurrently \"npm run docker:up\" \"npm run api:dev\" \"npm run frontend:dev\"",
+    "dev:all": "npm run docker:up && npm run docker:wait-healthy && concurrently \"npm run api:dev\" \"npm run frontend:dev\"",
+    "docker:wait-healthy": "node -e \"const axios = require('axios'); const check = async () => { for(let i=0; i<30; i++) { try { await axios.get('http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s'); console.log('Elasticsearch is healthy'); return; } catch(e) { console.log(`Waiting for Elasticsearch... (${i+1}/30)`); await new Promise(r => setTimeout(r, 2000)); } } throw new Error('Elasticsearch not ready'); }; check();\"",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",

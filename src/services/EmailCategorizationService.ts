@@ -69,16 +69,18 @@ Category:`;
 
             // Extract just the category if there's extra text
             const validCategories: CategoryLabel[] = [
+                'NOT_INTERESTED',  // Check this first to avoid matching substring in INTERESTED
                 'INTERESTED',
                 'MEETING_BOOKED',
-                'NOT_INTERESTED',
                 'SPAM',
                 'OUT_OF_OFFICE'
             ];
 
-            // Try to find a valid category in the response
+            // Try to find a valid category in the response using exact match
             for (const category of validCategories) {
-                if (text.includes(category)) {
+                // Use word boundary regex to ensure exact match
+                const regex = new RegExp(`\\b${category}\\b`, 'i');
+                if (regex.test(text)) {
                     return { category, rawResponse };
                 }
             }
@@ -104,7 +106,10 @@ Category:`;
                 return { category: 'SPAM', rawResponse: 'Fallback rule: spam keywords detected' };
             }
             
-            throw new Error('Unable to classify email and no fallback rule matched');
+            // If classification fails for any reason (API errors, rate limiting, etc.), 
+            // categorize as OUT_OF_OFFICE as a safe fallback
+            logger.warn(`Unable to classify email, using OUT_OF_OFFICE fallback for: ${email.subject}`);
+            return { category: 'OUT_OF_OFFICE', rawResponse: 'Fallback: Classification failed, defaulted to OUT_OF_OFFICE' };
         }
     }
 
@@ -132,13 +137,23 @@ Category:`;
                 geminiResponse: result.rawResponse
             };
         } catch (error) {
+            // This should no longer happen since classifyEmail now has a fallback,
+            // but keep this as an additional safety net
             logger.error('Failed to categorize email:', {
                 error,
                 subject: email.subject,
                 messageId: email.messageId
             });
             
-            throw error; // Re-throw to let caller handle the error
+            // Final fallback - return OUT_OF_OFFICE if something still goes wrong
+            const timestamp = new Date();
+            return {
+                messageId: email.messageId,
+                category: 'OUT_OF_OFFICE',
+                confidence: 0.1, // Low confidence since this is a fallback
+                categorizedAt: timestamp,
+                geminiResponse: 'Emergency fallback: Categorization completely failed'
+            };
         }
     }
 }
